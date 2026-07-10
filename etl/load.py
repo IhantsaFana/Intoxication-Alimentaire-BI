@@ -27,15 +27,13 @@ def charger_donnees_postgresql(df, config=None, output_path=None):
         if creation_script.exists():
             with open(creation_script, "r", encoding="utf-8") as f:
                 sql_content = f.read()
-            with engine.connect() as conn:
+            with engine.begin() as conn:
                 conn.execute(text(sql_content))
-                conn.commit()
             print("[LOAD] Schémas et tables créés.")
         
         # 1. Vider la table staging (optionnel)
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(text("TRUNCATE TABLE staging.intoxication_raw CASCADE;"))
-            conn.commit()
         print("[LOAD] Table staging.intoxication_raw vidée.")
 
         # 2. Charger le DataFrame dans PostgreSQL
@@ -55,18 +53,17 @@ def charger_donnees_postgresql(df, config=None, output_path=None):
             "etl-03-analytics.sql",
         ]
 
-        with engine.connect() as conn:
-            for script_file in sql_scripts:
-                script_path = sql_dir / script_file
-                if script_path.exists():
-                    with open(script_path, "r", encoding="utf-8") as f:
-                        sql_content = f.read()
-                    print(f"[LOAD] Exécution de {script_file}...")
+        for script_file in sql_scripts:
+            script_path = sql_dir / script_file
+            if script_path.exists():
+                with open(script_path, "r", encoding="utf-8") as f:
+                    sql_content = f.read()
+                print(f"[LOAD] Exécution de {script_file}...")
+                with engine.begin() as conn:
                     conn.execute(text(sql_content))
-                    conn.commit()
-                    print(f"[LOAD] {script_file} exécuté avec succès.")
-                else:
-                    print(f"[LOAD] ⚠️ Fichier SQL non trouvé : {script_path}")
+                print(f"[LOAD] {script_file} exécuté avec succès.")
+            else:
+                print(f"[LOAD] ⚠️ Fichier SQL non trouvé : {script_path}")
 
         engine.dispose()
         print("[LOAD] ✅ Chargement PostgreSQL terminé avec succès.")
