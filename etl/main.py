@@ -5,7 +5,7 @@ from load import charger_donnees_postgresql
 
 if __name__ == "__main__":
     # Paramètres globaux
-    fichier_entree = "C:/Users/ASUS/Desktop/Cours-BI-EMIT/TP/Projets-BI-Vente-fournitures/dataset/donnees_ventes_fournitures_scolaires_1000_brutes_2026.xlsx"
+    fichier_entree = "./data/ventes_fournitures.csv"
     
     config_postgres = {
         "user": "postgres",
